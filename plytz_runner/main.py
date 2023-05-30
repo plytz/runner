@@ -49,37 +49,36 @@ def init():
     runners = run_playbooks(playbooks)
     print(JsonSuccessResult(events=runners[0].events).json())
 
-# def main():
-#     args = parser.parse_args()
-#     try:
-#         json_input = JsonInput(**json.loads(args.json_input))
-#     except json.JSONDecodeError as error:
-#         print(JsonErrorResult(message="Unable to decode JSON input").json())
-#         sys.exit(1)
-#     except ValidationError as error:
-#         print(JsonErrorResult(
-#             message="Unable to decode JSON input",
-#             errors=error.errors()).json())
-#         sys.exit(1)
-#     except Exception as error:
-#         print(JsonErrorResult(message="Something went wrong").json())
-#         sys.exit(1)
+def main():
+    args = parser.parse_args()
+    try:
+        json_input = JsonInput(**json.loads(args.json_input))
+    except json.JSONDecodeError as error:
+        print(JsonErrorResult(message="Unable to decode JSON input").json())
+        sys.exit(1)
+    except ValidationError as error:
+        print(JsonErrorResult(
+            message="Unable to decode JSON input",
+            errors=error.errors()).json())
+        sys.exit(1)
+    except Exception as error:
+        print(JsonErrorResult(message="Something went wrong").json())
+        sys.exit(1)
 
-#     if json_input.action == "init":
-#         init()
+    if json_input.action == "init":
+        init()
 
-#     sys.exit(0)
+    sys.exit(0)
 
 
-
-# if __name__ == "__main__":
-#     main()
 
 from fastapi import FastAPI
+
+from .routers import artifacts
 
 app = FastAPI()
 
 
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
+app.include_router(artifacts.router)
+
+

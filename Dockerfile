@@ -1,6 +1,7 @@
 FROM python:3.10 as base
 
-WORKDIR /plytz
+ENV WORKDIR=/plytz
+WORKDIR ${WORKDIR}
 
 RUN apt-get update && apt-get install -y \
     curl tar gzip openssh-client libyaml-dev unzip rsync jq expect \
@@ -9,10 +10,11 @@ RUN apt-get update && apt-get install -y \
 
 COPY requirements.txt .
 RUN pip install -r requirements.txt
+EXPOSE 8000
 
 FROM base as production
-RUN useradd -mUs /bin/sh -d /plytz plytz \
-    && chown -R plytz:plytz /plytz
+RUN useradd -mUs /bin/sh -d ${WORKDIR} plytz \
+    && chown -R plytz:plytz ${WORKDIR}
 COPY --chown=plytz . .
 USER plytz
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0"]
+CMD ["uvicorn", "plytz_runner.main:app", "--host", "0.0.0.0"]

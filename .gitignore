@@ -158,7 +158,10 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
+artifacts/*
 artifacts/!.gitkeep
 
-env/ssh_key
+inventory/*
 inventory/!.gitkeep
+
+env/ssh_key
