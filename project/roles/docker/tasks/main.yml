@@ -1,0 +1,110 @@
+---
+# tasks file for docker
+
+- name: Ensure old versions of docker are not present
+  ansible.builtin.apt:
+    name:
+      - docker
+      - docker-engine
+      - docker.io
+      - containerd
+      - runc
+    state: absent
+
+- name: Ensure required APT pre-requisites are present
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+      - python3-pip
+    state: present
+
+- name: Ensure required PIP pre-requisites are present
+  ansible.builtin.pip:
+    name:
+      - docker>=5.0.0
+    state: present
+
+- name: Ensure Docker GPG key is present
+  ansible.builtin.apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    keyring: /etc/apt/keyrings/docker.gpg
+    state: present
+
+- name: Get architecture
+  ansible.builtin.command: dpkg --print-architecture
+  register: arch_cmd
+  changed_when: false
+
+- name: Ensure Docker DEB repository is present
+  ansible.builtin.apt_repository:
+    repo: >
+      deb [arch={{ arch_cmd.stdout}} signed-by=/etc/apt/keyrings/docker.gpg]
+      https://download.docker.com/linux/ubuntu {{ ansible_facts['distribution_release'] }} stable
+    update_cache: true
+    filename: docker-ce
+    state: present
+
+- name: Ensure Docker packages are present
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-compose-plugin
+      - docker-compose
+    state: present
+    install_recommends: true
+
+- name: Ensure that the docker service is stated and enabled
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Ensure that the containerd service is stated and enabled
+  ansible.builtin.service:
+    name: containerd
+    state: started
+    enabled: true
+
+- name: Ensure the required users can operate the Docker service
+  ansible.builtin.user:
+    name: ubuntu
+    groups: docker
+    append: true
+    state: present
+
+- name: Ensure swarm mode is enabled
+  community.docker.docker_swarm:
+    state: present
+  when: docker_swarm_enabled
+
+- name: Ensure that the Docker cleanup service is present
+  ansible.builtin.template:
+    src: docker-cleanup.service.j2
+    dest: "/etc/systemd/system/docker-cleanup.service"
+    owner: root
+    group: root
+    mode: 0755
+  notify: systemd daemon-reload
+
+- name: Ensure that the Docker cleanup timer
+  ansible.builtin.template:
+    src: docker-cleanup.timer.j2
+    dest: "/etc/systemd/system/docker-cleanup.timer"
+    owner: root
+    group: root
+    mode: 0755
+  notify: systemd daemon-reload
+
+- name: Ensure that the Docker cleanup timer is enabled
+  ansible.builtin.systemd:
+    name: docker-cleanup.timer
+    enabled: true
+    state: started
+
+- name: Reset the SSH connection
+  meta: reset_connection

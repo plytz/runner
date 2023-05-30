@@ -1,0 +1,9 @@
+version: "3.8"
+services:
+  plytz-runner:
+    build:
+      context: .
+      target: base
+    command: uvicorn main:app --reload --host 0.0.0.0
+    volumes:
+      - .:/plytz

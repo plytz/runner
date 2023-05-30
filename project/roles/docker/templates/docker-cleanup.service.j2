@@ -1,0 +1,13 @@
+[Unit]
+Description=Docker cleanup
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+User=ubuntu
+Group=docker
+ExecStart=/bin/bash -lc "docker system prune -af"
+
+[Install]
+WantedBy=multi-user.target
