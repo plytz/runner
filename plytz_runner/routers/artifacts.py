@@ -1,5 +1,7 @@
 from fastapi import APIRouter
 
+from uuid import UUID
+
 from ..dependencies import WORKDIR
 from ..services import artifacts as artifacts_service
 
@@ -15,10 +17,10 @@ async def artifacts():
     return await artifacts_service.list_artifacts()
 
 @router.get("/{artifact_id}")
-async def artifact(artifact_id: str):
+async def artifact(artifact_id: UUID):
     return await artifacts_service.get_artifact(artifact_id)
 
 @router.get("/{artifact_id}/events")
-async def artifact_events(artifact_id: str):
+async def artifact_events(artifact_id: UUID):
     return await artifacts_service.get_artifact_events(artifact_id)
 
